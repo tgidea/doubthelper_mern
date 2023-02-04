@@ -48,6 +48,9 @@ function PollCard({ currentPost}) {
   const handleUpvote = (optionId) => {
     dispatch(likePostsAsync(currentPost._id, optionId, posts));
   };
+
+
+  //on first fetch we have populated 
   return (
     <Card className={classes.root}>
       <Container maxWidth="xl">
@@ -101,11 +104,11 @@ function PollCard({ currentPost}) {
           </Button>
           <Button
             size="small"
-            disabled = {!(currentPost.user._id === userId._id)}
+            disabled = {currentPost.user === userId._id?false:true}
             color="secondary"
             variant="contained"
             onClick={() => onDelete()}
-            >
+            >              
             Delete
           </Button>
         </CardActions>

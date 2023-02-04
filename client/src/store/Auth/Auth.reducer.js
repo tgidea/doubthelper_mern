@@ -17,7 +17,7 @@ export const authReducer = (state = INITIAL_STATE, action={}) => {
         case AUTH_ACTION_TYPES.AUTH_ACTION_SETUSER :
             const credential = payload.credential;  
 // setting the usesAll Space using disscussion section acion
-            setSpaceArrayAction(payload.discussionSpace);          
+            setSpaceArrayAction(payload.discussionSpace);                 
             localStorage.setItem('profile',JSON.stringify({credential}))            
             return {
                 ...state, 

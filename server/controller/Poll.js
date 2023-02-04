@@ -15,11 +15,7 @@ const getPosts = async (req, res) => {
             })
             .populate({
                 path: 'posts',
-                populate: {
-                    path: 'user',
-                    model: 'Userdoubthelper',
-                    select: 'name email'
-                }
+                model: 'Polldoubthelper'
             })
             .exec(function (err, data) {
                 if (err) {
@@ -48,9 +44,9 @@ const createPosts = async (req, res) => {
         });
         await newPost.save();
         const roomData = await Room.findOne({ _id: id })
-        
-        if(roomData)roomData.posts.push(newPost._id);
-        else return res.status(500).send({message:"Something went wrong"});
+
+        if (roomData) roomData.posts.push(newPost._id);
+        else return res.status(500).send({ message: "Something went wrong" });
         await roomData.save();
         res.status(201).json(newPost);
     } catch (error) {
@@ -86,14 +82,14 @@ const deletePost = async (req, res) => {
                 { _id: space },
                 { $pull: { posts: postId } },
                 { new: true },
-                async(error, updatedPoll) => {
+                async (error, updatedPoll) => {
                     if (error) {
                         return res.status(500).send(error);
                     }
                     await Poll.findByIdAndRemove({ _id: postId });
                     res.status(200).json({ message: "Post deleted successfully." });
                 }
-            );            
+            );
         }
         else return res.status(400).send({ message: "Not authorized." })
 
@@ -110,12 +106,13 @@ const likePost = async (req, res) => {
         }
         else if (!mongoose.Types.ObjectId.isValid(postId)) return res.status(404).send(`No post with id: ${postId}`);
         else {
-
+            // Finding poll 
             const post = await Poll.findOne({ _id: postId });
             let voteArray = post.votes;
             voteArray = voteArray.filter(vote => vote.user == req.userId);
             if (voteArray.length > 0) {
                 if (voteArray[0].optionId == optionId) {
+                    // if already liked the same option : remove it from post's vote array
                     Poll.findOneAndUpdate(
                         { _id: postId },
                         { $pull: { votes: { user: req.userId } } },
@@ -129,6 +126,7 @@ const likePost = async (req, res) => {
                     );
                 }
                 else {
+                    // update the option
                     Poll.findOneAndUpdate(
                         { _id: postId, "votes.user": req.userId },
                         { $set: { "votes.$.optionId": optionId } },

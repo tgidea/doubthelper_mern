@@ -18,9 +18,9 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 5000;
 app.use(cors());
-app.use('/',(req,res)=>{res.status(200).send("Server running successfully")})
 app.use('/posts', postRoutes);
 app.use('/user', userRoutes);
 app.use('/room', roomRoutes);
+app.use('/',(req,res)=>{res.status(200).send("Server running successfully")})
 
 app.listen(PORT , () => {console.log(`Listening to port ${PORT}👌😃`)});
