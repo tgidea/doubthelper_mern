@@ -15,20 +15,21 @@ import { likePostsAsync } from "../../store/Post/post.action";
 import useStyles from "./PollCard.styles";
 import { deletePostsAsync } from "../../store/Post/post.action";
 // import CommentPanel from '../Comments/Comments.components';
-import { selectPosts } from "../../store/Post/post.selector";
+import { selectRoomData } from "../../store/Post/post.selector";
 import { selectCurrentSpace } from "../../store/DisscusionSpace/DS.selector";
 import { selectCurrentUser } from "../../store/Auth/Auth.selector";
 
-function PollCard({ currentPost}) {
+function PollCard({ currentPost, index}) {
   const classes = useStyles();
   const [votes, setsVotes] = useState({ voteCnt: {}, selected: null });
   const dispatch = useDispatch();
-  const posts = useSelector(selectPosts);
+  const roomData = useSelector(selectRoomData);
   const currentSpace = useSelector(selectCurrentSpace);
+  const [showVoters, setShowVoters] = useState(false);
   const userId = useSelector(selectCurrentUser);
 
   const onDelete = async () => {
-    dispatch(deletePostsAsync(currentPost._id, currentSpace, posts));
+    dispatch(deletePostsAsync(currentPost._id, currentSpace, roomData));
   };
   const onComment = async () => {};
 
@@ -38,7 +39,7 @@ function PollCard({ currentPost}) {
     currentPost.votes.forEach((vote) => {
       if (voteObj[`${vote.optionId}`]) voteObj[`${vote.optionId}`] += 1;
       else voteObj[`${vote.optionId}`] = 1;
-      if (vote.user === userId._id) {
+      if (vote.user._id === userId._id) {
         ticked = vote.optionId;
       }
     });
@@ -46,27 +47,29 @@ function PollCard({ currentPost}) {
   }, [currentPost, userId]);
 
   const handleUpvote = (optionId) => {
-    dispatch(likePostsAsync(currentPost._id, optionId, posts));
+    dispatch(likePostsAsync(currentPost._id, optionId, roomData));
   };
 
-
-  //on first fetch we have populated 
+  //on first fetch we have populated
   return (
     <Card className={classes.root}>
-      <Container maxWidth="xl">
-        <CardContent>
+      <Container maxWidth="xl">        
+        <CardContent>          
           <div className={classes.imageContainer}>
             {currentPost.selectedFile &&
               currentPost.selectedFile.length > 1 && (
                 <img
                   className={classes.media}
-                  alt={` by ${currentPost.user.name}`}
+                  alt={` by ${currentPost.user}`}
                   src={currentPost.selectedFile}
                 />
               )}
           </div>
           <Typography className={classes.question} variant="h5" component="h2">
-            {currentPost.question}
+            {index+1}{". "} {currentPost.question}
+            <Typography component="span" variant="body2">
+              {"-"} {currentPost.user.name}
+            </Typography>
           </Typography>
           <Grid container spacing={2}>
             {currentPost.options.map((option) => (
@@ -79,14 +82,33 @@ function PollCard({ currentPost}) {
                       }
                     />
                   </IconButton>
-                  <Typography className={classes.optionText} variant="body2">
+                  <Typography className={classes.optionText} variant="body1">
                     {option.option}
                   </Typography>
-                  <Typography className={classes.upvoteCount} variant="body2">
-                    {votes.voteCnt[`${option._id}`]
-                      ? votes.voteCnt[`${option._id}`]
-                      : 0}{" "}
-                    votes
+                  <Typography
+                    component="div"
+                    className={classes.upvoteCount}
+                    variant="body2"
+                  >
+                    <span onClick={() => setShowVoters(!showVoters)}>
+                      {votes.voteCnt[`${option._id}`]
+                        ? votes.voteCnt[`${option._id}`]
+                        : 0}{" "}
+                      votes
+                    </span>
+                    {showVoters && (
+                      <div>
+                        {votes.voteCnt[`${option._id}`] && (
+                          <>
+                            {currentPost.votes
+                              .filter((vote) => vote.optionId === option._id)
+                              .map((vote) => (
+                                <li key={vote._id}>{vote.user.name}</li>
+                              ))}                            
+                          </>
+                        )}
+                      </div>
+                    )}
                   </Typography>
                 </div>
               </Grid>
@@ -104,15 +126,15 @@ function PollCard({ currentPost}) {
           </Button>
           <Button
             size="small"
-            disabled = {currentPost.user === userId._id?false:true}
+            disabled={currentPost.user._id === userId._id ? false : true}
             color="secondary"
             variant="contained"
             onClick={() => onDelete()}
-            >              
+          >
             Delete
           </Button>
         </CardActions>
-          {/* <CommentPanel></CommentPanel> */}
+        {/* <CommentPanel></CommentPanel> */}
       </Container>
     </Card>
   );

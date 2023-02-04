@@ -1,6 +1,7 @@
 const Poll = require("../modals/Poll");
 const Room = require('../modals/Room');
 const mongoose = require('mongoose');
+const { populate } = require("../modals/user");
 
 const getPosts = async (req, res) => {
     try {
@@ -8,15 +9,32 @@ const getPosts = async (req, res) => {
         if (!mongoose.Types.ObjectId.isValid(id)) return res.status(404).send(`No post with id: ${id}`);
 
         Room.findOne({ _id: id })
-            .populate({
-                path: 'user',
-                model: 'Userdoubthelper',
-                select: 'name email'
-            })
-            .populate({
-                path: 'posts',
-                model: 'Polldoubthelper'
-            })
+            .populate([
+                {
+                    path: 'user',
+                    model: 'Userdoubthelper',
+                    select: 'name email'
+                },
+                {
+                    path: "posts",
+                    model: "Polldoubthelper",
+                    populate: [
+                        {
+                            path: 'user',
+                            model: 'Userdoubthelper',
+                            select: 'name'
+                        },
+                        {
+                            path: 'votes',
+                            populate: {
+                                path: 'user',
+                                model: 'Userdoubthelper',
+                                select: 'name'
+                            }
+                        }
+                    ]
+                }
+            ])
             .exec(function (err, data) {
                 if (err) {
                     console.log(err);
@@ -30,6 +48,7 @@ const getPosts = async (req, res) => {
         res.status(404).json({ message: error.message });
     }
 }
+
 const createPosts = async (req, res) => {
     try {
         const body = req.body;
@@ -43,31 +62,29 @@ const createPosts = async (req, res) => {
             createdAt: new Date().toISOString()
         });
         await newPost.save();
-        const roomData = await Room.findOne({ _id: id })
 
+        const roomData = await Room.findOne({ _id: id })
         if (roomData) roomData.posts.push(newPost._id);
         else return res.status(500).send({ message: "Something went wrong" });
         await roomData.save();
-        res.status(201).json(newPost);
+                
+        const populatedPoll = await Poll.findById(newPost._id)
+            .populate([
+                {
+                    path: "user",
+                    model: "Userdoubthelper",
+                    select: 'name',
+                },
+                {
+                    path: 'votes.user',
+                    mode: "Userdoubthelper",
+                    select: 'name',
+                }
+            ])
+        return res.status(200).send(populatedPoll);
     } catch (error) {
         console.log(error);
         res.status(409).json({ message: error.message });
-    }
-}
-const updatePost = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { title, message, creator, selectedFile, tags } = req.body;
-
-        if (!mongoose.Types.ObjectId.isValid(id)) return res.status(404).send(`No post with id: ${id}`);
-
-        // Remember to add _id
-        const updatedPost = { creator, title, message, tags, selectedFile, _id: id };
-        await PostMessage.findByIdAndUpdate(id, updatedPost, { new: true });
-        res.json(updatedPost);
-    }
-    catch (error) {
-        res.status(500).send({ message: "Something wrong happened" })
     }
 }
 
@@ -98,6 +115,8 @@ const deletePost = async (req, res) => {
         res.status(500).send({ message: "Something wrong happened" })
     }
 }
+
+
 const likePost = async (req, res) => {
     try {
         const { postId, optionId } = req.params;
@@ -116,25 +135,42 @@ const likePost = async (req, res) => {
                     Poll.findOneAndUpdate(
                         { _id: postId },
                         { $pull: { votes: { user: req.userId } } },
-                        { new: true },
-                        (error, updatedPoll) => {
-                            if (error) {
-                                return res.status(500).send(error);
+                        { new: true })
+                        .populate([
+                            {
+                                path: "user",
+                                model: "Userdoubthelper",
+                                select: 'name',
+                            },
+                            {
+                                path: 'votes.user',
+                                mode: "Userdoubthelper",
+                                select: 'name',
                             }
+                        ]).exec((error, updatedPoll) => {
+                            if (error) return res.status(500).send(error);
                             return res.status(200).send(updatedPoll);
-                        }
-                    );
+                        })
                 }
                 else {
                     // update the option
                     Poll.findOneAndUpdate(
                         { _id: postId, "votes.user": req.userId },
                         { $set: { "votes.$.optionId": optionId } },
-                        { new: true, upsert: true },
-                        (error, updatedPoll) => {
-                            if (error) {
-                                return res.status(500).send(error);
+                        { new: true })
+                        .populate([
+                            {
+                                path: "user",
+                                model: "Userdoubthelper",
+                                select: 'name',
+                            },
+                            {
+                                path: 'votes.user',
+                                mode: "Userdoubthelper",
+                                select: 'name',
                             }
+                        ]).exec((error, updatedPoll) => {
+                            if (error) return res.status(500).send(error);
                             return res.status(200).send(updatedPoll);
                         })
                 }
@@ -143,11 +179,21 @@ const likePost = async (req, res) => {
                 Poll.findOneAndUpdate(
                     { _id: postId },
                     { $push: { votes: { user: req.userId, optionId: optionId } } },
-                    { new: true },
-                    (error, updatedPoll) => {
-                        if (error) {
-                            return res.status(500).send(error);
+                    { new: true })
+                    .populate([
+                        {
+                            path: "user",
+                            model: "Userdoubthelper",
+                            select: 'name',
+                        },
+                        {
+                            path: 'votes.user',
+                            mode: "Userdoubthelper",
+                            select: 'name',
                         }
+
+                    ]).exec((error, updatedPoll) => {
+                        if (error) return res.status(500).send(error);
                         return res.status(200).send(updatedPoll);
                     })
             }
@@ -158,6 +204,6 @@ const likePost = async (req, res) => {
         res.status(500).send({ message: "Something wrong happened" })
     }
 }
-module.exports = { getPosts, createPosts, updatePost, deletePost, likePost };
+module.exports = { getPosts, createPosts, deletePost, likePost };
 
 

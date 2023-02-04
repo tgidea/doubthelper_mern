@@ -5,6 +5,8 @@ export default makeStyles((theme) => ({
     marginTop: theme.spacing(2),
   },
   question: {
+    display: "flex",
+    justifyContent : "space-between",
     fontWeight: "bold",
     marginBottom: theme.spacing(1),
   },

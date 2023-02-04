@@ -5,25 +5,20 @@ import { selectCurrentSpace } from "../../store/DisscusionSpace/DS.selector";
 import { fetchPostsAsync } from "../../store/Post/post.action";
 import { useSelector, useDispatch } from "react-redux";
 import { useEffect } from "react";
-import { selectPosts } from "../../store/Post/post.selector";
+import { selectRoomData } from "../../store/Post/post.selector";
 import PollCards from "../PollCardContainer/pollCardContainer.compnents";
 import { selectCurrentUser } from "../../store/Auth/Auth.selector";
 
 const Room = () => {
-  const currentSpace = useSelector(selectCurrentSpace);
+  let currentSpace = useSelector(selectCurrentSpace);
   const dispatch = useDispatch();
-  const pollDatas = useSelector(selectPosts);
+  const roomData = useSelector(selectRoomData);
   const user = useSelector(selectCurrentUser);
   const [userId, setUser] = useState(user);
-  const [pollArray, setpollArray] = useState(pollDatas);
 
   useEffect(() => {
     dispatch(fetchPostsAsync(currentSpace));
   }, [currentSpace, dispatch]);
-
-  useEffect(() => {
-    setpollArray(pollDatas);
-  }, [pollDatas]);
 
   useEffect(() => {
     if (user) setUser(user._id);
@@ -33,8 +28,8 @@ const Room = () => {
     <div>
       <NewPollForm />
       {userId ? (
-        pollArray && pollArray[0] ? (
-          pollArray[0].posts.length === 0 ? (
+        roomData && roomData.posts ? (
+          roomData.posts.length === 0 ? (
             "Empty"
           ) : (
             <PollCards />

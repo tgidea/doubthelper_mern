@@ -1,27 +1,16 @@
 import React, { useState, useEffect } from "react";
-import {
-  TextField,
-  Button,
-  Container,
-  Typography,
-  Paper,
-  Collapse,
-  List,
-  ListItemText,
-  ListItem,
-} from "@material-ui/core";
+import {TextField, Button, Container, Typography, Paper, Collapse, List, ListItemText, ListItem, IconButton, ListItemSecondaryAction} from "@material-ui/core";
+import {Share} from '@material-ui/icons';
 import { useDispatch, useSelector } from "react-redux";
 import useStyles from "./Form.styles";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { selectCurrentUser } from "../../store/Auth/Auth.selector";
-import {
-  setCurrentSpaceAsync,
-  createSpaceAsync,
-} from "../../store/DisscusionSpace/DS.action";
+import { setCurrentSpaceAsync, createSpaceAsync,} from "../../store/DisscusionSpace/DS.action";
 import { selectSpaceArray } from "../../store/DisscusionSpace/DS.selector";
 
 const Form = () => {
-  const user = useSelector(selectCurrentUser);
+  const {space} = useParams();
+;  const user = useSelector(selectCurrentUser);
   const [currentspace, setCurrentSpace] = useState("");
   const discussSpaceArray = useSelector(selectSpaceArray);
   const [spaceArray, setSpaceArray] = useState(discussSpaceArray);
@@ -30,6 +19,21 @@ const Form = () => {
   const [open, setOpen] = React.useState(false);
   const classes = useStyles();
   const navigate = useNavigate();
+
+  useEffect( ()=>{
+    if(space) setCurrentSpace(space);
+  },[space])
+
+  const handleShare = (value) => {
+    if (navigator.share) {
+      navigator.share({
+        title: "Come join to my discussion space",
+        text: `https://magical-blancmange-f00c4b.netlify.app/${value}`,
+      });
+    } else {
+      window.alert("share option disabled");
+    }
+  };
 
   useEffect(() => {
     setCurrentUser(user);
@@ -97,11 +101,25 @@ const Form = () => {
           <Collapse in>
             {spaceArray.map((space, index) => (
               <List key={index} className={classes.list}>
-                <ListItem button onClick={() => {setCurrentSpace(space)}}>
+                <ListItem
+                  button
+                  onClick={() => {
+                    setCurrentSpace(space);
+                  }}
+                >
                   <ListItemText primary={space} />
+                  <ListItemSecondaryAction>
+                    <IconButton
+                      edge="end"
+                      aria-label="share"
+                      onClick={() => handleShare(space)}
+                    >
+                      <Share/>
+                    </IconButton>
+                  </ListItemSecondaryAction>
                 </ListItem>
               </List>
-            ))}
+            ))}            
           </Collapse>
         )}
       </Container>

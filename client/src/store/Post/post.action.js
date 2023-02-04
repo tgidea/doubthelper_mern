@@ -11,75 +11,63 @@ export const postsActionSuccess = (postArray) =>
 export const postsActionFailed = (error) =>
     createAction(POSTS_ACTION_TYPES.POSTS_ACTION_FAILED, error);
 
-const addNewPostToArray = (post, postArray) => {    
-    let newPostArray;
-    if (postArray.length === 0) {
-        newPostArray = [...postArray, post];
-    }
-    else {
-        newPostArray = [{
-            ...postArray[0],
-            posts : [...postArray[0].posts, post]            
-        }]
-    }    
-    return newPostArray;
+const setRoomData = (roomData) => {
+    return { ...roomData };
 }
-const deletePost = (postId, postArray) => {
-    const newArray = postArray[0].posts;
+const addNewPostToRoomData = (post, roomData) => {
+    let newPostArray = roomData.posts;    
+    return { ...roomData, posts: [...newPostArray, post] }
+}
+const deletePost = (postId, roomData) => {
+    const newArray = roomData.posts;
     let updatedPost = newArray.filter((post) => post._id !== postId);
-    return [{
-        ...postArray[0],
-        posts : updatedPost
-    }]
-}
-
-const updatePost = (postId, data, postArray) => {
-    const newArray = postArray[0].posts;
-    let updatedPost = newArray.map( (post) => post._id === data._id? data : post);
-    return [{
-        ...postArray[0],
-        posts : updatedPost
-    }]
-}
-
-export const fetchPostsAsync = (space) => async (dispatch) => {
-    dispatch(postsActionStart());
-    try {
-        const { data } = await api.fetchPosts(space);
-        dispatch(postsActionSuccess(addNewPostToArray(data, [])));
-    } catch (error) {
-        console.log(error);
-        dispatch(postsActionFailed(error.message));
+    return {
+        ...roomData,
+        posts: updatedPost
     }
 }
-export const createPostsAsync = (space, post, postArray) => async (dispatch) => {
-    dispatch(postsActionStart());    
+const updatePost = (newPost, roomData) => {
+    const newArray = roomData.posts;
+    let updatedPost = newArray.map((currPost) => currPost._id === newPost._id ? newPost : currPost);
+    return {
+        ...roomData,
+        posts: updatedPost
+    }
+}
+
+export const fetchPostsAsync = (space) => async (dispatch) => {    
     try {
+        const { data } = await api.fetchPosts(space);        
+        dispatch(postsActionSuccess(setRoomData(data)));
+    } catch (error) {
+        console.log(error);
+        window.alert("Please recheck your space id")        
+    }
+}
+export const createPostsAsync = (space, post, roomData) => async (dispatch) => {
+    dispatch(postsActionStart());
+    try {        
         const { data } = await api.createPosts(space, post);        
-        dispatch(postsActionSuccess(addNewPostToArray(data, postArray)));
+        dispatch(postsActionSuccess(addNewPostToRoomData(data, roomData)));
     } catch (error) {
         console.log(error);
         dispatch(postsActionFailed(error.message));
     }
 }
 
-export const deletePostsAsync = (postId, space, postArray) => async (dispatch) => {
-    dispatch(postsActionStart());
+export const deletePostsAsync = (postId, space, roomData) => async (dispatch) => {
     try {
-        await api.deletePost(postId, space);        
-        dispatch(postsActionSuccess(deletePost(postId, postArray)));
+        await api.deletePost(postId, space);
+        dispatch(postsActionSuccess(deletePost(postId, roomData)));
     } catch (error) {
-        console.log(error);
-        dispatch(postsActionFailed(error.message));
+        console.log(error);        
     }
 }
-export const likePostsAsync = (postId, optionId, postArray=[]) => async (dispatch) => {
-    dispatch(postsActionStart());
+export const likePostsAsync = (postId, optionId, roomData = []) => async (dispatch) => {    
     try {
-        const { data } = await api.likePost(postId, optionId);
-        dispatch(postsActionSuccess(updatePost(postId, data, postArray)));
+        const { data } = await api.likePost(postId, optionId);        
+        dispatch(postsActionSuccess(updatePost(data, roomData)));
     } catch (error) {
         console.log(error);
-        dispatch(postsActionFailed(error.message));
     }
 }

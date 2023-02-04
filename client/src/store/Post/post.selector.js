@@ -2,7 +2,12 @@ import {createSelector} from 'reselect'
 
 const selectPostReducer = (state) => state.posts;
 
-export const selectPosts = createSelector(
+export const selectRoomData = createSelector(
     [selectPostReducer],
-    ( postSlice ) => postSlice.postsArray
+    ( postSlice ) => postSlice.roomData
+)
+
+export const selectIsLoading = createSelector(
+    [selectPostReducer],
+    ( postSlice ) => postSlice.isLoading
 )

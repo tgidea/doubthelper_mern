@@ -8,6 +8,7 @@ require('./connection');
 const postRoutes = require('./routes/posts');
 const userRoutes = require('./routes/user');
 const roomRoutes = require('./routes/room');
+const apiRoutes = require('./routes/api');
 const app = express();
 
 app.use(bodyParser.json({limit : "3mb", extended:true}));
@@ -21,6 +22,8 @@ app.use(cors());
 app.use('/posts', postRoutes);
 app.use('/user', userRoutes);
 app.use('/room', roomRoutes);
+app.use('/api', apiRoutes);
+
 app.use('/',(req,res)=>{res.status(200).send("Server running successfully")})
 
 app.listen(PORT , () => {console.log(`Listening to port ${PORT}👌😃`)});

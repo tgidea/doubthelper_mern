@@ -1,6 +1,6 @@
 import { POSTS_ACTION_TYPES } from "./post.types";
 const INITIAL_STATE = {
-    postsArray: [],
+    roomData: {},
     isLoading: false,
     error: null
 }
@@ -18,7 +18,7 @@ export const postReducer = (state = INITIAL_STATE, action = {}) => {
             return {
                 ...state,
                 isLoading: false,                
-                postsArray: payload,
+                roomData: payload,
             }
         }
         case POSTS_ACTION_TYPES.POSTS_ACTION_FAILED:
