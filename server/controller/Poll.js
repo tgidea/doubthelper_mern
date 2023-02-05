@@ -67,7 +67,7 @@ const createPosts = async (req, res) => {
         if (roomData) roomData.posts.push(newPost._id);
         else return res.status(500).send({ message: "Something went wrong" });
         await roomData.save();
-                
+
         const populatedPoll = await Poll.findById(newPost._id)
             .populate([
                 {
@@ -120,87 +120,41 @@ const deletePost = async (req, res) => {
 const likePost = async (req, res) => {
     try {
         const { postId, optionId } = req.params;
-        if (!req.userId) {
+        const { userId } = req;
+        if (!userId) {
             return res.status(400).json({ message: "Unauthenticated" });
         }
         else if (!mongoose.Types.ObjectId.isValid(postId)) return res.status(404).send(`No post with id: ${postId}`);
         else {
-            // Finding poll 
-            const post = await Poll.findOne({ _id: postId });
-            let voteArray = post.votes;
-            voteArray = voteArray.filter(vote => vote.user == req.userId);
-            if (voteArray.length > 0) {
-                if (voteArray[0].optionId == optionId) {
-                    // if already liked the same option : remove it from post's vote array
-                    Poll.findOneAndUpdate(
+            // user vote not present 
+            const updatedPoll = await Poll.findOneAndUpdate({
+                    _id: postId,"votes.user": { $ne: userId }},{
+                    $push: {votes: {user: userId,optionId: optionId}}
+                }, 
+                {upsert: false,new: true,}
+            )
+            if (!updatedPoll) {
+                // user has already voted
+                const newUpdatedPoll = await Poll.findOneAndUpdate({
+                    _id: postId,"votes.user":userId,"votes.optionId": { $ne: optionId }},
+                    { $set: { "votes.$.optionId": optionId } },{ new: true })
+                if (!newUpdatedPoll) {
+                    await Poll.findOneAndUpdate(
                         { _id: postId },
-                        { $pull: { votes: { user: req.userId } } },
-                        { new: true })
-                        .populate([
-                            {
-                                path: "user",
-                                model: "Userdoubthelper",
-                                select: 'name',
-                            },
-                            {
-                                path: 'votes.user',
-                                mode: "Userdoubthelper",
-                                select: 'name',
-                            }
-                        ]).exec((error, updatedPoll) => {
-                            if (error) return res.status(500).send(error);
-                            return res.status(200).send(updatedPoll);
-                        })
-                }
-                else {
-                    // update the option
-                    Poll.findOneAndUpdate(
-                        { _id: postId, "votes.user": req.userId },
-                        { $set: { "votes.$.optionId": optionId } },
-                        { new: true })
-                        .populate([
-                            {
-                                path: "user",
-                                model: "Userdoubthelper",
-                                select: 'name',
-                            },
-                            {
-                                path: 'votes.user',
-                                mode: "Userdoubthelper",
-                                select: 'name',
-                            }
-                        ]).exec((error, updatedPoll) => {
-                            if (error) return res.status(500).send(error);
-                            return res.status(200).send(updatedPoll);
-                        })
+                        { $pull: { votes: { user: userId } } })
                 }
             }
-            else {
-                Poll.findOneAndUpdate(
-                    { _id: postId },
-                    { $push: { votes: { user: req.userId, optionId: optionId } } },
-                    { new: true })
-                    .populate([
-                        {
-                            path: "user",
-                            model: "Userdoubthelper",
-                            select: 'name',
-                        },
-                        {
-                            path: 'votes.user',
-                            mode: "Userdoubthelper",
-                            select: 'name',
-                        }
-
-                    ]).exec((error, updatedPoll) => {
-                        if (error) return res.status(500).send(error);
-                        return res.status(200).send(updatedPoll);
-                    })
-            }
+            // populating the poll questiion and sending back;
+            const newData = await Poll.findOne({_id:postId}).populate([
+                {path: "user",model: "Userdoubthelper",select: 'name'},
+                {path: 'votes.user',mode: "Userdoubthelper",select: 'name',}
+            ])
+            if(newData) return res.status(200).send(newData);
+            else return res.status(500).send({message:"something went wrong"})
         }
     }
     catch (error) {
-        console.log(error);
+        console.log("error in liking post");
         res.status(500).send({ message: "Something wrong happened" })
     }
 }

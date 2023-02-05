@@ -46,4 +46,12 @@ export default makeStyles((theme) => ({
     backgroundColor: deepPurple[500],
     marginRight: "20px"
   },
+  initial :{
+    height : "100vh",
+    width : "100%",
+    display : "flex",
+    justifyContent : "center",
+    flexDirection : "column",
+    alignItems : "center"
+  }
 }));

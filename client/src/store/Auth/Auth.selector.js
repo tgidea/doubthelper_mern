@@ -4,3 +4,7 @@ export const selectCurrentUser = createSelector(
     [selectAuthReducer],
     (authSlice) => authSlice.authData
 )
+export const selectIsLoading = createSelector(
+    [selectAuthReducer],
+    (authSlice) => authSlice.isLoading
+)

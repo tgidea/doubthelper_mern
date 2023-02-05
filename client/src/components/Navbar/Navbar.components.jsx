@@ -1,7 +1,14 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import decode from "jwt-decode";
-import { AppBar, Avatar, Button, Toolbar, Typography } from "@material-ui/core";
+import {
+  AppBar,
+  Avatar,
+  Button,
+  Toolbar,
+  Typography,
+  CircularProgress,
+} from "@material-ui/core";
 import { signUpUserGoogleAsync } from "../../store/Auth/Auth.action";
 import { useState, useEffect } from "react";
 import useStyles from "./Navbar.styles";
@@ -17,22 +24,24 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
   const user = useSelector(selectCurrentUser);
+  const [showComponent, setShowComponenet] = useState(true);
 
   useEffect(() => {
     setCurrentUser(user);
-  }, [user]);
-
-  useEffect(() => {
     const profile = JSON.parse(localStorage.getItem("profile"));
-    if (profile && profile.credential) {
+
+    if (!user && profile && profile.credential) {
+      setShowComponenet(false);
       dispatch(signUpUserGoogleAsync(profile.credential));
+    } else{
+      setShowComponenet(true);
     }
-  }, [dispatch]);
+  }, [user, dispatch]);
 
   const logout = () => {
     dispatch(signOutUserAsync());
     setCurrentUser(null);
-    navigate("/");
+    navigate("/auth");
   };
 
   useEffect(() => {
@@ -42,48 +51,56 @@ const Navbar = () => {
       if (decodedToken.exp * 1000 < new Date().getTime()) {
         dispatch(signOutUserAsync());
         setCurrentUser(null);
-        navigate("/");
+        navigate("/auth");
       }
     }
   }, [location, dispatch, navigate]);
 
   return (
     <div className={classes.root}>
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" className={classes.title}>
-            DoubtHelper
-          </Typography>
-          <Toolbar className={classes.toolbar}>
-            {currentUser ? (
-              <div className={classes.profile}>
-                <Avatar className={classes.purple} alt={currentUser.name}>
-                  {currentUser?.name.charAt(0)}
-                </Avatar>
+      {showComponent ? (
+        <AppBar position="static">
+          <Toolbar>
+            <Typography variant="h6" className={classes.title}>
+              DoubtHelper
+            </Typography>
+            <Toolbar className={classes.toolbar}>
+              {currentUser ? (
+                <div className={classes.profile}>
+                  <Avatar className={classes.purple} alt={currentUser.name}>
+                    {currentUser?.name.charAt(0)}
+                  </Avatar>
+                  <Button
+                    size="small"
+                    variant="contained"
+                    className={classes.logout}
+                    color="secondary"
+                    onClick={logout}
+                  >
+                    Logout
+                  </Button>
+                </div>
+              ) : (
                 <Button
-                  size="small"
+                  component={Link}
+                  to="/auth"
                   variant="contained"
-                  className={classes.logout}
-                  color="secondary"
-                  onClick={logout}
+                  color="primary"
                 >
-                  Logout
+                  Sign In
                 </Button>
-              </div>
-            ) : (
-              <Button
-                component={Link}
-                to="/auth"
-                variant="contained"
-                color="primary"
-              >
-                Sign In
-              </Button>
-            )}
+              )}
+            </Toolbar>
           </Toolbar>
-        </Toolbar>
-      </AppBar>
-      <Outlet />
+        </AppBar>
+      ) : (
+        <div className={classes.initial}>
+          {" "}
+          <CircularProgress />
+          {"Please wait few seconds..."}
+        </div>
+      )}
+      {showComponent && <Outlet />}
     </div>
   );
 };

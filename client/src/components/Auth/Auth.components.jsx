@@ -1,10 +1,9 @@
-import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
   signInUserAsync,
   signUpUserAsync,
   signUpUserGoogleAsync,
-  signOutUserAsync,
 } from "../../store/Auth/Auth.action";
 import {
   Avatar,
@@ -13,12 +12,15 @@ import {
   Grid,
   Typography,
   Container,
+  CircularProgress,
 } from "@material-ui/core";
 import { useNavigate } from "react-router-dom";
-import { GoogleLogin, googleLogout, useGoogleLogin } from "@react-oauth/google";
+import { GoogleLogin } from "@react-oauth/google";
 import LockOutlinedIcon from "@material-ui/icons/LockOutlined";
+import { selectIsLoading } from "../../store/Auth/Auth.selector";
 import useStyles from "./Auth.styles";
 import Input from "./Input.comonents";
+import { selectCurrentUser } from "../../store/Auth/Auth.selector";
 
 const initialState = {
   firstName: "",
@@ -31,10 +33,14 @@ const initialState = {
 const SignUp = () => {
   const [form, setForm] = useState(initialState);
   const [isSignup, setIsSignup] = useState(false);
+  const user = useSelector(selectCurrentUser);
+  const [waitToDisplayForm, setWaitToDisplayForm] = useState(true);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const classes = useStyles();
-
+  const isLoading = useSelector(selectIsLoading);
+  const [isProcessing, setIsProcessing] = useState(isLoading);
+  const [fetchingStart, setFetchingStart] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const handleShowPassword = () => setShowPassword(!showPassword);
 
@@ -43,28 +49,37 @@ const SignUp = () => {
     setIsSignup((prevIsSignup) => !prevIsSignup);
     setShowPassword(false);
   };
+  useEffect(() => {
+    setIsProcessing((prevState) => {
+      if((prevState !== isLoading) && fetchingStart && !isLoading){
+        setFetchingStart(false);
+        navigate('/')
+      }
+      setIsProcessing(isLoading);
+    });
+  }, [isLoading, fetchingStart, navigate]);
+
+  useEffect(() => {
+    if (user) navigate("/");
+    else setWaitToDisplayForm(false);
+  }, [user, navigate]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
     if (isSignup) {
       dispatch(signUpUserAsync(form));
-      navigate("/");
     } else {
       dispatch(signInUserAsync(form));
-      navigate("/");
     }
+    setFetchingStart(true);
   };
   const googleSuccess = async (response) => {
     try {
       dispatch(signUpUserGoogleAsync(response.credential));
       navigate("/");
-    } catch (error) {
-      console.log(error);
-    }
+    } catch (error) {}
   };
   const googleError = (error) => {
-    console.log(error);
     alert("Google Sign In was unsuccessful. Try again later");
   };
 
@@ -73,77 +88,86 @@ const SignUp = () => {
 
   return (
     <Container component="main" maxWidth="xs">
-      <Paper className={classes.paper} elevation={3}>
-        <Avatar className={classes.avatar}>
-          <LockOutlinedIcon />
-        </Avatar>
-        <Typography component="h1" variant="h5">
-          {isSignup ? "Sign up" : "Sign in"}
-        </Typography>
-        <form className={classes.form} onSubmit={handleSubmit}>
-          <Grid container spacing={2}>
-            {isSignup && (
-              <>
-                <Input
-                  name="firstName"
-                  label="First Name"
-                  handleChange={handleChange}
-                  autoFocus
-                  half
-                />
-                <Input
-                  name="lastName"
-                  label="Last Name"
-                  handleChange={handleChange}
-                  half
-                />
-              </>
-            )}
-            <Input
-              name="email"
-              label="Email Address"
-              handleChange={handleChange}
-              type="email"
-            />
-            <Input
-              name="password"
-              label="Password"
-              handleChange={handleChange}
-              type={showPassword ? "text" : "password"}
-              handleShowPassword={handleShowPassword}
-            />
-            {isSignup && (
+      {!waitToDisplayForm && (
+        <Paper className={classes.paper} elevation={3}>
+          <Avatar className={classes.avatar}>
+            <LockOutlinedIcon />
+          </Avatar>
+          <Typography component="h1" variant="h5">
+            {isSignup ? "Sign up" : "Sign in"}
+          </Typography>
+          <form className={classes.form} onSubmit={handleSubmit}>
+            <Grid container spacing={2}>
+              {isSignup && (
+                <>
+                  <Input
+                    name="firstName"
+                    label="First Name"
+                    handleChange={handleChange}
+                    autoFocus
+                    half
+                  />
+                  <Input
+                    name="lastName"
+                    label="Last Name"
+                    handleChange={handleChange}
+                    half
+                  />
+                </>
+              )}
               <Input
-                name="confirmPassword"
-                label="Repeat Password"
+                name="email"
+                label="Email Address"
                 handleChange={handleChange}
-                type="password"
+                type="email"
               />
-            )}
-          </Grid>
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            color="primary"
-            className={classes.submit}
-          >
-            {isSignup ? "Sign Up" : "Sign In"}
-          </Button>
-          <Button fullWidth>
-            <GoogleLogin onSuccess={googleSuccess} onError={googleError} />
-          </Button>
-          <Grid container justifyContent="flex-end">
-            <Grid item>
-              <Button onClick={switchMode}>
-                {isSignup
-                  ? "Already have an account? Sign in"
-                  : "Don't have an account? Sign Up"}
-              </Button>
+              <Input
+                name="password"
+                label="Password"
+                handleChange={handleChange}
+                type={showPassword ? "text" : "password"}
+                handleShowPassword={handleShowPassword}
+              />
+              {isSignup && (
+                <Input
+                  name="confirmPassword"
+                  label="Repeat Password"
+                  handleChange={handleChange}
+                  type="password"
+                />
+              )}
             </Grid>
-          </Grid>
-        </form>
-      </Paper>
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              color="primary"
+              className={classes.submit}
+              disabled={isProcessing}
+            >
+              {isSignup ? "Sign Up" : "Sign In"}
+              {isProcessing && (
+                <CircularProgress
+                  size={24}
+                  className={classes.buttonProgress}
+                />
+              )}
+            </Button>
+            <Button fullWidth>
+              <GoogleLogin onSuccess={googleSuccess} onError={googleError} />
+            </Button>
+            <Grid container justifyContent="flex-end">
+              <Grid item>
+                <Button onClick={switchMode}>
+                  {isSignup
+                    ? "Already have an account? Sign in"
+                    : "Don't have an account? Sign Up"}
+                </Button>
+              </Grid>
+            </Grid>
+          </form>
+        </Paper>
+      )}
     </Container>
   );
 };

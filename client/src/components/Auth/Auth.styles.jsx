@@ -22,7 +22,15 @@ export default makeStyles((theme) => ({
     marginTop: theme.spacing(3),
   },
   submit: {
+    position: "relative",
     margin: theme.spacing(3, 0, 2),
+  },
+  buttonProgress: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    marginTop: -12,
+    marginLeft: -12,
   },
   googleButton: {
     marginBottom: theme.spacing(2),
