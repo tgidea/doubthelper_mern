@@ -9,7 +9,6 @@ API.interceptors.request.use((req) => {
   return req;
 });
 
-
 export const fetchPosts = (space) => API.get(`/posts/${space}`);
 export const createPosts = (space,newPost) => API.post(`/posts/${space}`, newPost);
 export const likePost = (postId, optionId) => API.patch(`/posts/${postId}/likePost/${optionId}`);
@@ -21,3 +20,7 @@ export const signUp = (formData) => API.post('/user/signup', formData);
 export const signUpGoogle = (formData) => API.post('/user/signupgoogle', formData);  
 
 export const create = () => API.get('/room/create');
+
+export const getComments = (postId) => API.get(`/comment/${postId}`);
+export const createComment = (postId, formData) => API.post(`/comment/${postId}`, formData);
+export const deleteComment = (postId, commentId) => API.delete(`/comment/${postId}/${commentId}`);

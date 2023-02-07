@@ -26,13 +26,15 @@ const Room = () => {
 
   return (
     <div>
-      <NewPollForm />
+      <NewPollForm />      
       {userId ? (
         roomData && roomData.posts ? (
           roomData.posts.length === 0 ? (
             "Empty"
           ) : (
-            <PollCards />
+            <div>                           
+              <PollCards />
+            </div>
           )
         ) : (
           <CircularProgress />

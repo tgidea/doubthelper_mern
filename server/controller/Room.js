@@ -19,7 +19,7 @@ const generateSpace = async (req,res) => {
             res.status(201).send([...user.discussionSpace]);
         }
     } catch(error) {
-        console.log(error);
+        // console.log(error);
         res.status(500).sendd({message: "Something went wrong"})
     }
 }

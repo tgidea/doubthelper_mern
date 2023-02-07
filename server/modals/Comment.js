@@ -5,13 +5,18 @@ const commentSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  user : {
+  "name": {
     type: String,
-    required:true
+    required: true
   },
-  createdAt : {
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Userdoubthelper',
+    required: true
+  },
+  createdAt: {
     type: Date,
-    default : Date.now(),
+    default: Date.now(),
   }
 });
 

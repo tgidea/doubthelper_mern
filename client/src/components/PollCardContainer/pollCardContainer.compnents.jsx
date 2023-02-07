@@ -15,12 +15,13 @@ const PollCardContainer = () => {
   const userId = useSelector(selectCurrentUser) ;
 
   return (
-    <div className={classes.root}>
+    <div className={classes.root}>      
       { userId && roomData.posts && discussionSpace && discussionSpace.length &&
         <Grid container spacing={1}>
+          
           {roomData.posts.map((postData, index) => (
           <Grid item xs={12} key={postData._id}>
-            <PollCard currentPost={postData} index={index}/>
+            <PollCard currentPost={postData} index={index} roomData={roomData}/>
           </Grid>
         ))}
         </Grid>

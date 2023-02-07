@@ -2,25 +2,24 @@ import React, { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
-  CardActions,
   Typography,
-  IconButton,
   Container,
-  Button,
   Grid,
 } from "@material-ui/core";
-import ThumbUpIcon from "@material-ui/icons/ThumbUp";
 import { useDispatch, useSelector } from "react-redux";
 import { likePostsAsync } from "../../store/Post/post.action";
 import useStyles from "./PollCard.styles";
 import { deletePostsAsync } from "../../store/Post/post.action";
-// import CommentPanel from '../Comments/Comments.components';
+import PollCardOption from "./PollCardOption/PollCardOption.components";
+import PollCardAction from "./PollCardActions/PollCardAction.components";
 import { selectRoomData } from "../../store/Post/post.selector";
 import { selectCurrentSpace } from "../../store/DisscusionSpace/DS.selector";
 import { selectCurrentUser } from "../../store/Auth/Auth.selector";
+import { useNavigate } from "react-router-dom";
 
-function PollCard({ currentPost, index}) {
+function PollCard({ currentPost, index }) {
   const classes = useStyles();
+  const navigate = useNavigate();
   const [votes, setsVotes] = useState({ voteCnt: {}, selected: null });
   const dispatch = useDispatch();
   const roomData = useSelector(selectRoomData);
@@ -31,7 +30,9 @@ function PollCard({ currentPost, index}) {
   const onDelete = async () => {
     dispatch(deletePostsAsync(currentPost._id, currentSpace, roomData));
   };
-  const onComment = async () => {};
+  const onComment = async () => {
+    navigate(`/comment/${currentPost._id}`)
+  };
 
   useEffect(() => {
     let voteObj = {};
@@ -53,8 +54,8 @@ function PollCard({ currentPost, index}) {
   //on first fetch we have populated
   return (
     <Card className={classes.root}>
-      <Container maxWidth="xl">        
-        <CardContent>          
+      <Container maxWidth="xl">
+        <CardContent>
           <div className={classes.imageContainer}>
             {currentPost.selectedFile &&
               currentPost.selectedFile.length > 1 && (
@@ -66,7 +67,8 @@ function PollCard({ currentPost, index}) {
               )}
           </div>
           <Typography className={classes.question} variant="h5" component="h2">
-            {index+1}{". "} {currentPost.question}
+            {index + 1}
+            {". "} {currentPost.question}
             <Typography component="span" variant="body2">
               {"-"} {currentPost.user.name}
             </Typography>
@@ -74,67 +76,25 @@ function PollCard({ currentPost, index}) {
           <Grid container spacing={2}>
             {currentPost.options.map((option) => (
               <Grid item key={option._id} xs={12}>
-                <div className={classes.option}>
-                  <IconButton onClick={() => handleUpvote(option._id)}>
-                    <ThumbUpIcon
-                      color={
-                        votes.selected === option._id ? "primary" : "inherit"
-                      }
-                    />
-                  </IconButton>
-                  <Typography className={classes.optionText} variant="body1">
-                    {option.option}
-                  </Typography>
-                  <Typography
-                    component="div"
-                    className={classes.upvoteCount}
-                    variant="body2"
-                  >
-                    <span onClick={() => setShowVoters(!showVoters)}>
-                      {votes.voteCnt[`${option._id}`]
-                        ? votes.voteCnt[`${option._id}`]
-                        : 0}{" "}
-                      votes
-                    </span>
-                    {showVoters && (
-                      <div>
-                        {votes.voteCnt[`${option._id}`] && (
-                          <>
-                            {currentPost.votes
-                              .filter((vote) => vote.optionId === option._id)
-                              .map((vote) => (
-                                <li key={vote._id}>{vote.user.name}</li>
-                              ))}                            
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </Typography>
-                </div>
+                <PollCardOption
+                  votes={votes}
+                  option={option}
+                  handleUpvote={handleUpvote}
+                  setShowVoters={setShowVoters}
+                  showVoters={showVoters}
+                  currentPostVotes={currentPost.votes}
+                />
               </Grid>
             ))}
           </Grid>
         </CardContent>
-        <CardActions>
-          <Button
-            size="small"
-            color="primary"
-            variant="contained"
-            onClick={() => onComment()}
-          >
-            Comment
-          </Button>
-          <Button
-            size="small"
-            disabled={currentPost.user._id === userId._id ? false : true}
-            color="secondary"
-            variant="contained"
-            onClick={() => onDelete()}
-          >
-            Delete
-          </Button>
-        </CardActions>
-        {/* <CommentPanel></CommentPanel> */}
+        <PollCardAction
+          onComment={onComment}
+          onDelete={onDelete}
+          currentPostUserId={currentPost.user._id}
+          userId={userId._id}
+          createdAt={currentPost.createdAt}
+        />
       </Container>
     </Card>
   );

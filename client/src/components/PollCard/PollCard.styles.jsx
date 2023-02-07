@@ -10,17 +10,6 @@ export default makeStyles((theme) => ({
     fontWeight: "bold",
     marginBottom: theme.spacing(1),
   },
-  option: {
-    display: "flex",
-    alignItems: "center",
-    marginBottom: theme.spacing(0.1),
-  },
-  optionText: {
-    marginLeft: theme.spacing(0, 1),
-  },
-  upvoteCount: {
-    marginLeft: "auto",
-  },
   media: {
     maxHeight:"250px",
     maxWidth : "250px"

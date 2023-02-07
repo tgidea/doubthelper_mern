@@ -10,7 +10,7 @@ import { selectSpaceArray } from "../../store/DisscusionSpace/DS.selector";
 
 const Form = () => {
   const {space} = useParams();
-;  const user = useSelector(selectCurrentUser);
+  const user = useSelector(selectCurrentUser);
   const [currentspace, setCurrentSpace] = useState("");
   const discussSpaceArray = useSelector(selectSpaceArray);
   const [spaceArray, setSpaceArray] = useState(discussSpaceArray);

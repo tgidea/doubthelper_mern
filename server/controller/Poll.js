@@ -44,7 +44,7 @@ const getPosts = async (req, res) => {
             });
 
     } catch (error) {
-        console.log(error);
+        // console.log(error);
         res.status(404).json({ message: error.message });
     }
 }
@@ -126,35 +126,39 @@ const likePost = async (req, res) => {
         }
         else if (!mongoose.Types.ObjectId.isValid(postId)) return res.status(404).send(`No post with id: ${postId}`);
         else {
-            // user vote not present 
+            // user vote not present             
             const updatedPoll = await Poll.findOneAndUpdate({
-                    _id: postId,"votes.user": { $ne: userId }},{
-                    $push: {votes: {user: userId,optionId: optionId}}
-                }, 
-                {upsert: false,new: true,}
-            )
-            if (!updatedPoll) {
+                _id: postId, "votes.user": { $ne: userId }
+            }, {
+                $push: { votes: { user: userId, optionId: optionId } }
+            },
+                { upsert: false, new: true, }
+            )            
+            if (!updatedPoll) {                
                 // user has already voted
                 const newUpdatedPoll = await Poll.findOneAndUpdate({
-                    _id: postId,"votes.user":userId,"votes.optionId": { $ne: optionId }},
-                    { $set: { "votes.$.optionId": optionId } },{ new: true })
+                    _id: postId, "votes": {
+                        $elemMatch: { "user": userId, "optionId": optionId }
+                    }
+                },
+                    { $pull: { votes: { user: userId } } },
+                    { new: true })
                 if (!newUpdatedPoll) {
                     await Poll.findOneAndUpdate(
-                        { _id: postId },
-                        { $pull: { votes: { user: userId } } })
+                        { _id: postId, "votes.user": userId },
+                        { $set: { "votes.$.optionId": optionId } }, { new: true })
                 }
             }
             // populating the poll questiion and sending back;
-            const newData = await Poll.findOne({_id:postId}).populate([
-                {path: "user",model: "Userdoubthelper",select: 'name'},
-                {path: 'votes.user',mode: "Userdoubthelper",select: 'name',}
+            const newData = await Poll.findOne({ _id: postId }).populate([
+                { path: "user", model: "Userdoubthelper", select: 'name' },
+                { path: 'votes.user', mode: "Userdoubthelper", select: 'name' },
             ])
-            if(newData) return res.status(200).send(newData);
-            else return res.status(500).send({message:"something went wrong"})
+            if (newData) return res.status(200).send(newData);
+            else return res.status(500).send({ message: "something went wrong" })
         }
     }
-    catch (error) {
-        console.log("error in liking post");
+    catch (error) {        
         res.status(500).send({ message: "Something wrong happened" })
     }
 }

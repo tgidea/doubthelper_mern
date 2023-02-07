@@ -50,7 +50,7 @@ export const createPostsAsync = (space, post, roomData) => async (dispatch) => {
         const { data } = await api.createPosts(space, post);        
         dispatch(postsActionSuccess(addNewPostToRoomData(data, roomData)));
     } catch (error) {
-        console.log(error);
+        if(error.message === "Network Error"){window.alert("Upto 3mb data transmission only.")}
         dispatch(postsActionFailed(error.message));
     }
 }
