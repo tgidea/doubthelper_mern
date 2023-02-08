@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import NewPollForm from "../PollForm/PollForm.components";
 import { CircularProgress } from "@material-ui/core";
 import { selectCurrentSpace } from "../../store/DisscusionSpace/DS.selector";
@@ -14,25 +14,22 @@ const Room = () => {
   const dispatch = useDispatch();
   const roomData = useSelector(selectRoomData);
   const user = useSelector(selectCurrentUser);
-  const [userId, setUser] = useState(user);
 
   useEffect(() => {
-    dispatch(fetchPostsAsync(currentSpace));
+    const savedSpace = localStorage.getItem("space");
+    if (!currentSpace && savedSpace)dispatch(fetchPostsAsync(savedSpace));
+    else dispatch(fetchPostsAsync(currentSpace));
   }, [currentSpace, dispatch]);
-
-  useEffect(() => {
-    if (user) setUser(user._id);
-  }, [user]);
 
   return (
     <div>
-      <NewPollForm />      
-      {userId ? (
+      <NewPollForm />
+      {user && user._id ? (
         roomData && roomData.posts ? (
           roomData.posts.length === 0 ? (
             "Empty"
           ) : (
-            <div>                           
+            <div>
               <PollCards />
             </div>
           )

@@ -1,15 +1,30 @@
 import React, { useState, useEffect } from "react";
-import {TextField, Button, Container, Typography, Paper, Collapse, List, ListItemText, ListItem, IconButton, ListItemSecondaryAction} from "@material-ui/core";
-import {Share} from '@material-ui/icons';
+import {
+  TextField,
+  Button,
+  Container,
+  Typography,
+  Paper,
+  Collapse,
+  List,
+  ListItemText,
+  ListItem,
+  IconButton,
+  ListItemSecondaryAction,
+} from "@material-ui/core";
+import { Share } from "@material-ui/icons";
 import { useDispatch, useSelector } from "react-redux";
 import useStyles from "./Form.styles";
 import { useNavigate, useParams } from "react-router-dom";
 import { selectCurrentUser } from "../../store/Auth/Auth.selector";
-import { setCurrentSpaceAsync, createSpaceAsync,} from "../../store/DisscusionSpace/DS.action";
+import {
+  setCurrentSpaceAsync,
+  createSpaceAsync,
+} from "../../store/DisscusionSpace/DS.action";
 import { selectSpaceArray } from "../../store/DisscusionSpace/DS.selector";
 
 const Form = () => {
-  const {space} = useParams();
+  const { space } = useParams();
   const user = useSelector(selectCurrentUser);
   const [currentspace, setCurrentSpace] = useState("");
   const discussSpaceArray = useSelector(selectSpaceArray);
@@ -20,9 +35,9 @@ const Form = () => {
   const classes = useStyles();
   const navigate = useNavigate();
 
-  useEffect( ()=>{
-    if(space) setCurrentSpace(space);
-  },[space])
+  useEffect(() => {
+    if (space) setCurrentSpace(space);
+  }, [space]);
 
   const handleShare = (value) => {
     if (navigator.share) {
@@ -73,30 +88,44 @@ const Form = () => {
             value={currentspace}
             onChange={(e) => setCurrentSpace(e.target.value)}
           />
+          {currentUser ? (
+            <Button
+              className={classes.buttonSubmit}
+              variant="contained"
+              color="primary"
+              size="large"
+              type="submit"
+              disabled={currentUser ? false : true}
+              fullWidth
+            >
+              Join Discussion Space
+            </Button>
+          ) : (
+            <Button
+              className={classes.buttonSubmit}
+              variant="contained"
+              color="primary"
+              size="large"
+              onClick={() => navigate('/auth')}
+              fullWidth
+            >
+              Sign In
+            </Button>
+          )}
+        </form>
+        {currentUser && (
           <Button
             className={classes.buttonSubmit}
             variant="contained"
             color="primary"
             size="large"
-            type="submit"
+            onClick={() => createSpace()}
             disabled={currentUser ? false : true}
             fullWidth
           >
-            Join Discussion Space
+            Your Discussion Space
           </Button>
-        </form>
-
-        <Button
-          className={classes.buttonSubmit}
-          variant="contained"
-          color="primary"
-          size="large"
-          onClick={() => createSpace()}
-          disabled={currentUser ? false : true}
-          fullWidth
-        >
-          Your Discussion Space
-        </Button>
+        )}
         {open && (
           <Collapse in>
             {spaceArray.map((space, index) => (
@@ -114,12 +143,12 @@ const Form = () => {
                       aria-label="share"
                       onClick={() => handleShare(space)}
                     >
-                      <Share/>
+                      <Share />
                     </IconButton>
                   </ListItemSecondaryAction>
                 </ListItem>
               </List>
-            ))}            
+            ))}
           </Collapse>
         )}
       </Container>

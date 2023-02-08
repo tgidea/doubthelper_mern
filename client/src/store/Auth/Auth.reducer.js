@@ -25,7 +25,7 @@ export const authReducer = (state = INITIAL_STATE, action={}) => {
                 isLoading : false
             }
         case AUTH_ACTION_TYPES.AUTH_ACTION_UNSETUSER:
-            localStorage.clear()
+            localStorage.removeItem("profile");
             return {
                 ...state,
                 authData : null,
