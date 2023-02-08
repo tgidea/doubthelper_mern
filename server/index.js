@@ -14,28 +14,21 @@ const app = express();
 app.use(bodyParser.json({ limit: "3mb", extended: true }))
 app.use(bodyParser.urlencoded({ limit: "3mb", extended: true }));
 
-app.use((err, req, res, next) => {	
-    if(err.type == "entity.too.large"){        
-        return res.status(413).send({message:"Enitiy too large"});
-    }
-    next();
+app.use((err, req, res, next) => {
+	if (err.type == "entity.too.large") {
+		return res.status(413).send({ message: "Enitiy too large" });
+	}
+	next();
 });
 
 
 const PORT = process.env.PORT || 5000;
-const CLIENT_URL = "https://magical-blancmange-f00c4b.netlify.app/"
-// const CLIENT_URL = "http://localhost:3000"
-app.use(
-	cors({
-		origin: `${CLIENT_URL}`,
-		methods: "GET,POST,PUT,DELETE,PATCH",
-		credentials: true,
-	})
-);
+
+app.use(cors());
 app.use('/posts', postRoutes);
 app.use('/user', userRoutes);
 app.use('/room', roomRoutes);
-app.use('/comment',commentRoutes);
+app.use('/comment', commentRoutes);
 
 app.use('/', (req, res) => { res.status(200).send("Server running successfully") })
 

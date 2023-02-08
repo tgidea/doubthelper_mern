@@ -1,6 +1,7 @@
 const Poll = require("../modals/Poll");
 const Room = require('../modals/Room');
 const mongoose = require('mongoose');
+const Comment = require('../modals/Comment');
 const { populate } = require("../modals/user");
 
 const getPosts = async (req, res) => {
@@ -95,6 +96,7 @@ const deletePost = async (req, res) => {
         if (!mongoose.Types.ObjectId.isValid({ id: postId })) return res.status(404).send(`No post with id: ${postId}`);
         const postUser = await Poll.findOne({ _id: postId });
         if (postUser && (String(postUser.user._id) === req.userId)) {
+
             Room.findOneAndUpdate(
                 { _id: space },
                 { $pull: { posts: postId } },
@@ -103,7 +105,12 @@ const deletePost = async (req, res) => {
                     if (error) {
                         return res.status(500).send(error);
                     }
-                    await Poll.findByIdAndRemove({ _id: postId });
+                    const poll = await Poll.findById(postId);
+                    if (!poll) {
+                        return res.status(500).send({message:`Poll with id ${postId} not found`});
+                    }
+                    await Comment.deleteMany({ _id: { $in: poll.comments } });
+                    await poll.remove();   
                     res.status(200).json({ message: "Post deleted successfully." });
                 }
             );
@@ -133,8 +140,8 @@ const likePost = async (req, res) => {
                 $push: { votes: { user: userId, optionId: optionId } }
             },
                 { upsert: false, new: true, }
-            )            
-            if (!updatedPoll) {                
+            )
+            if (!updatedPoll) {
                 // user has already voted
                 const newUpdatedPoll = await Poll.findOneAndUpdate({
                     _id: postId, "votes": {
@@ -158,7 +165,7 @@ const likePost = async (req, res) => {
             else return res.status(500).send({ message: "something went wrong" })
         }
     }
-    catch (error) {        
+    catch (error) {
         res.status(500).send({ message: "Something wrong happened" })
     }
 }
