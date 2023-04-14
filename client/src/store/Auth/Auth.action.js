@@ -18,8 +18,8 @@ export const signInUserAsync = (formData) => async (dispatch) => {
     try {
         const { data } = await api.signIn(formData);
         dispatch(setUserAction(data));
-    } catch (error) {
-        dispatch(userActionFailed(error.message));
+    } catch (error) {        
+        dispatch(userActionFailed(error.response.data.message));
     }
 }
 export const signUpUserAsync = (formData) => async (dispatch) => {
@@ -28,7 +28,7 @@ export const signUpUserAsync = (formData) => async (dispatch) => {
         const { data } = await api.signUp(formData);
         dispatch(setUserAction(data));
     } catch (error) {
-        dispatch(userActionFailed(error.message));
+        dispatch(userActionFailed(error.response.data.message));
     }
 }
 export const signUpUserGoogleAsync = (credential) => async (dispatch) => {
@@ -40,7 +40,7 @@ export const signUpUserGoogleAsync = (credential) => async (dispatch) => {
         dispatch(setUserAction(data));
     } catch (error) {
         console.log(error);
-        dispatch(userActionFailed(error.message));
+        dispatch(userActionFailed(error.response.data.message));
     }
 }
 export const signOutUserAsync = () => async (dispatch) => {
@@ -48,7 +48,7 @@ export const signOutUserAsync = () => async (dispatch) => {
     try {
         dispatch(unsetUserAction());
     } catch (error) {
-        dispatch(userActionFailed(error.message));
+        dispatch(userActionFailed(error.response.data.message));
     }
 }
 

@@ -11,7 +11,6 @@ const secret = process.env.SECRET;
 
 const signin = async (req, res) => {
     const { email, password } = req.body;
-
     try {
         if (password.length < 2) res.status(500).json({ message: "Password not match" });
         const oldUser = await UserModal.findOne({ email });
@@ -48,7 +47,7 @@ const signup = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: "Something went wrong" });
 
-        console.log(error);
+        console.log("Error occured in controller/user");
     }
 };
 const signUpGoogle = async (req, res) => {

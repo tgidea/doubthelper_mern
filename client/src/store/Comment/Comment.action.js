@@ -36,7 +36,7 @@ export const createCommentAsync = (postId, formData, commentArray) => async (dis
         dispatch(commentActionCreateSuccess(addComment(data, commentArray)));
     }
     catch (error) {
-        dispatch(commentActionCreateFailed());
+        dispatch(commentActionCreateFailed(error));
     }
 }
 export const fetchCommentAsync = (postId) => async (dispatch) => {
@@ -46,7 +46,7 @@ export const fetchCommentAsync = (postId) => async (dispatch) => {
         dispatch(commentActionFetchSuccess(data));
     }
     catch (error) {
-        dispatch(commentActionFetchFailed());
+        dispatch(commentActionFetchFailed(error));
     }
 }
 export const deleteCommentAsync = (postId, commentId) => async (dispatch) => {
@@ -56,7 +56,7 @@ export const deleteCommentAsync = (postId, commentId) => async (dispatch) => {
         dispatch(commentActionDeleteSuccess());
     }
     catch (error) {
-        dispatch(commentActionDeleteFailed());
+        dispatch(commentActionDeleteFailed(error));
     }
 }
 

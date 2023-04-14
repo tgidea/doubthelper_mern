@@ -17,7 +17,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import LockOutlinedIcon from "@material-ui/icons/LockOutlined";
-import { selectIsLoading } from "../../store/Auth/Auth.selector";
+import { selectIsLoading, selectIsError } from "../../store/Auth/Auth.selector";
 import useStyles from "./Auth.styles";
 import Input from "./Input.comonents";
 import { selectCurrentUser } from "../../store/Auth/Auth.selector";
@@ -39,25 +39,19 @@ const SignUp = () => {
   const navigate = useNavigate();
   const classes = useStyles();
   const isLoading = useSelector(selectIsLoading);
+  const error = useSelector(selectIsError);
   const [isProcessing, setIsProcessing] = useState(isLoading);
-  const [fetchingStart, setFetchingStart] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const handleShowPassword = () => setShowPassword(!showPassword);
 
-  const switchMode = () => {
+  const switchMode = () => {    
     setForm(initialState);
     setIsSignup((prevIsSignup) => !prevIsSignup);
     setShowPassword(false);
   };
   useEffect(() => {
-    setIsProcessing((prevState) => {
-      if((prevState !== isLoading) && fetchingStart && !isLoading){
-        setFetchingStart(false);
-        navigate('/')
-      }
-      setIsProcessing(isLoading);
-    });
-  }, [isLoading, fetchingStart, navigate]);
+    setIsProcessing(false);
+  }, [isLoading, error]);
 
   useEffect(() => {
     if (user) navigate("/");
@@ -66,17 +60,23 @@ const SignUp = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if( form.email === ''){
+      return alert("Please fill your email.");
+    }
+    if( form.password === ''){
+      return alert("Please fill your password.");
+    }
+    setIsProcessing(true);
     if (isSignup) {
       dispatch(signUpUserAsync(form));
     } else {
       dispatch(signInUserAsync(form));
     }
-    setFetchingStart(true);
   };
   const googleSuccess = async (response) => {
     try {
+      setIsProcessing(true);
       dispatch(signUpUserGoogleAsync(response.credential));
-      navigate("/");
     } catch (error) {}
   };
   const googleError = (error) => {
@@ -137,6 +137,9 @@ const SignUp = () => {
                 />
               )}
             </Grid>
+            {error && <Typography component="h6" variant="subtitle1">
+              {error}
+            </Typography>}
             <Button
               type="submit"
               fullWidth
